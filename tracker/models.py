@@ -8,6 +8,9 @@ class Game(models.Model):
         "Platform", on_delete=models.SET_NULL, null=True, blank=True
     )
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         ordering = ["title"]
         verbose_name = "Game"
@@ -19,11 +22,14 @@ class GameVersion(models.Model):
         "Game",
         on_delete=models.PROTECT,
     )
-    version = models.CharField(verbose_name="Version", blank=True, max_length=300)
-    is_archived = models.BooleanField(verbose_name="Archived")
-    is_played = models.BooleanField(verbose_name="Played")
-    is_completed = models.BooleanField(verbose_name="Completed")
-    release_date = models.DateField(verbose_name="Release Date", blank=True)
+    version = models.CharField(verbose_name="Version", max_length=300)
+    is_archived = models.BooleanField(verbose_name="Archived", default=False)
+    is_played = models.BooleanField(verbose_name="Played", default=False)
+    is_completed = models.BooleanField(verbose_name="Completed", default=False)
+    release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.game} ({self.game.platform}) ({self.version})"
 
     class Meta:
         ordering = ["game"]
@@ -32,20 +38,26 @@ class GameVersion(models.Model):
 
 
 class Platform(models.Model):
-    name = models.CharField(verbose_name="Platform Name", max_length=300)
-    release_date = models.DateField(verbose_name="Release Date")
+    title = models.CharField(verbose_name="Platform Title", max_length=300)
+    release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+
+    def __str__(self):
+        return self.title
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["title"]
         verbose_name = "Platform"
         verbose_name_plural = "Platforms"
 
 
 class PlatformVersion(models.Model):
     platform = models.ForeignKey("Platform", on_delete=models.PROTECT)
-    version = models.CharField(verbose_name="Version", blank=True, max_length=300)
-    is_archived = models.BooleanField(verbose_name="Archived")
-    release_date = models.DateField(verbose_name="Release Date", blank=True)
+    version = models.CharField(verbose_name="Version", max_length=300)
+    is_archived = models.BooleanField(verbose_name="Archived", default=False)
+    release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.platform.title} ({self.version})"
 
     class Meta:
         ordering = ["platform"]
@@ -60,7 +72,3 @@ class PlatformVersion(models.Model):
     #     # Ensuring clean method validation
     #     self.clean()
     #     super().save(*args, *kwargs)
-
-    # def __str__(self):
-    #     # Setting title field as identifier for admin panel
-    #     return self.title
