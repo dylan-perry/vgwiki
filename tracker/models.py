@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 
 
 class Game(models.Model):
-    title = models.CharField(verbose_name="Game Title")
+    title = models.CharField(verbose_name="Game Title", max_length=300)
     platform = models.ForeignKey(
         "Platform", on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -19,11 +19,11 @@ class GameVersion(models.Model):
         "Game",
         on_delete=models.PROTECT,
     )
-    version = models.CharField(verbose_name="Version", blank=True)
+    version = models.CharField(verbose_name="Version", blank=True, max_length=300)
     is_archived = models.BooleanField(verbose_name="Archived")
     is_played = models.BooleanField(verbose_name="Played")
     is_completed = models.BooleanField(verbose_name="Completed")
-    release_date = models.DateTimeField(verbose_name="Release Date", blank=True)
+    release_date = models.DateField(verbose_name="Release Date", blank=True)
 
     class Meta:
         ordering = ["game"]
@@ -32,8 +32,8 @@ class GameVersion(models.Model):
 
 
 class Platform(models.Model):
-    name = models.CharField(verbose_name="Platform Name")
-    release_date = models.CharField(verbose_name="Release Date")
+    name = models.CharField(verbose_name="Platform Name", max_length=300)
+    release_date = models.DateField(verbose_name="Release Date")
 
     class Meta:
         ordering = ["name"]
@@ -43,9 +43,9 @@ class Platform(models.Model):
 
 class PlatformVersion(models.Model):
     platform = models.ForeignKey("Platform", on_delete=models.PROTECT)
-    version = models.CharField(verbose_name="Version", blank=True)
+    version = models.CharField(verbose_name="Version", blank=True, max_length=300)
     is_archived = models.BooleanField(verbose_name="Archived")
-    release_date = models.CharField(verbose_name="Release Date", blank=True)
+    release_date = models.DateField(verbose_name="Release Date", blank=True)
 
     class Meta:
         ordering = ["platform"]

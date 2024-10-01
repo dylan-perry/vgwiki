@@ -1,1 +1,3 @@
 .venv
+vgwiki/__pycache__
+tracker/__pycache__
