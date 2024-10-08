@@ -3,30 +3,36 @@ from django.core.exceptions import ValidationError
 
 
 class Game(models.Model):
-    title = models.CharField(verbose_name="Game Title", max_length=300)
+    name = models.CharField(verbose_name="Game Name", max_length=300)
     platform = models.ForeignKey(
-        "Platform", on_delete=models.SET_NULL, null=True, blank=True
-    )
+        "Platform", on_delete=models.PROTECT, blank=True, null=True)
+    description = models.TextField(verbose_name="Description", blank=True, null=True)
+    release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+    url = models.CharField(verbose_name="IGDB Link", max_length=400, blank=True, null=True)
 
     def __str__(self):
-        return self.title
+        return self.name
 
     class Meta:
-        ordering = ["title"]
+        ordering = ["name"]
         verbose_name = "Game"
         verbose_name_plural = "Games"
 
 
 class GameVersion(models.Model):
+    class PlayedStatusChoices(models.IntegerChoices):
+        unplayed = '0', 'Unplayed'
+        played = '1', 'Played'
+        completed = '2', 'Completed'
+    
     game = models.ForeignKey(
         "Game",
         on_delete=models.PROTECT,
     )
     version = models.CharField(verbose_name="Version", max_length=300)
-    is_archived = models.BooleanField(verbose_name="Archived", default=False)
-    is_played = models.BooleanField(verbose_name="Played", default=False)
-    is_completed = models.BooleanField(verbose_name="Completed", default=False)
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+    is_archived = models.BooleanField(verbose_name="Archived", default=False)
+    played_status = models.IntegerField(choices=PlayedStatusChoices.choices, default=PlayedStatusChoices.unplayed)
 
     def __str__(self):
         return f"{self.game} ({self.game.platform}) ({self.version})"
@@ -38,14 +44,16 @@ class GameVersion(models.Model):
 
 
 class Platform(models.Model):
-    title = models.CharField(verbose_name="Platform Title", max_length=300)
+    name = models.CharField(verbose_name="Platform Name", max_length=300)
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+    url = models.CharField(verbose_name="IGDB Link", max_length=400, blank=True, null=True)
+    generation = models.IntegerField(verbose_name = "Generation", blank=True, null=True)
 
     def __str__(self):
-        return self.title
+        return self.name
 
     class Meta:
-        ordering = ["title"]
+        ordering = ["name"]
         verbose_name = "Platform"
         verbose_name_plural = "Platforms"
 
@@ -57,18 +65,21 @@ class PlatformVersion(models.Model):
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
 
     def __str__(self):
-        return f"{self.platform.title} ({self.version})"
+        return f"{self.platform.name} ({self.version})"
 
     class Meta:
         ordering = ["platform"]
         verbose_name = "Platform Version"
         verbose_name_plural = "Platform Versions"
 
-    # TODO: Not sure if any of the below are necessary yet
-    # def clean(self):
-    #     super().clean() # Call the parent class's clean method
+class GameEngine(models.Model):
+    name = models.CharField(verbose_name="Game Engine Name", max_length=300)
+    url = models.CharField(verbose_name="IGDB Link", max_length=400, blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
 
-    # def save(self, *args, **kwargs):
-    #     # Ensuring clean method validation
-    #     self.clean()
-    #     super().save(*args, *kwargs)
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Game Engine"
+        verbose_name_plural = "Game Engines"
