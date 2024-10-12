@@ -9,11 +9,16 @@ class Game(models.Model):
     description = models.TextField(verbose_name="Description", blank=True, null=True)
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
     url = models.CharField(verbose_name="IGDB Link", max_length=400, blank=True, null=True)
+    igdb_id = models.IntegerField(verbose_name="IGDB ID", default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    test_boolean = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
 
     class Meta:
+        unique_together = ('name', 'platform', 'igdb_id')
         ordering = ["name"]
         verbose_name = "Game"
         verbose_name_plural = "Games"
@@ -33,6 +38,8 @@ class GameVersion(models.Model):
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
     is_archived = models.BooleanField(verbose_name="Archived", default=False)
     played_status = models.IntegerField(choices=PlayedStatusChoices.choices, default=PlayedStatusChoices.unplayed)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.game} ({self.game.platform}) ({self.version})"
@@ -48,6 +55,9 @@ class Platform(models.Model):
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
     url = models.CharField(verbose_name="IGDB Link", max_length=400, blank=True, null=True)
     generation = models.IntegerField(verbose_name = "Generation", blank=True, null=True)
+    igdb_id = models.IntegerField(verbose_name="IGDB ID", default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -63,6 +73,8 @@ class PlatformVersion(models.Model):
     version = models.CharField(verbose_name="Version", max_length=300)
     is_archived = models.BooleanField(verbose_name="Archived", default=False)
     release_date = models.DateField(verbose_name="Release Date", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.platform.name} ({self.version})"
@@ -75,6 +87,9 @@ class PlatformVersion(models.Model):
 class GameEngine(models.Model):
     name = models.CharField(verbose_name="Game Engine Name", max_length=300)
     url = models.CharField(verbose_name="IGDB Link", max_length=400, blank=True, null=True)
+    igdb_id = models.IntegerField(verbose_name="IGDB ID", default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.name

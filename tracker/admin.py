@@ -1,39 +1,53 @@
 from django.contrib import admin
-from import_export import resources, fields, widgets
-from .models import Game, GameVersion, Platform, PlatformVersion
+from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+from datetime import datetime
+
+from .models import Game, GameVersion, Platform, PlatformVersion
 
 class GameResource(resources.ModelResource):
 
     class Meta:
         model = Game
-        fields = ('id', 'name', 'url', 'summary', 'first_release_date', 'platforms')
+        fields = ('id', 'name', 'platform', 'description', 'release_date', 'url', 'igdb_id', 'created_at')
 
-    def get_import_fields(self):
-        fields = super().get_import_fields()
-        for field in fields:
-            if field.column_name == 'summary':
-                field.attribute = 'description'
-            if field.column_name == 'first_release_date':
-                field.attribute = 'release_date'
-        return fields
+    def convert_date(self, row_date):
+        return datetime.strptime(row_date, '%Y-%m-%d %H:%M:%S') if row_date else None
+    
+    def get_platform_objects(self, row_platforms):
+        platform_ids = row_platforms[1:-1].split(',') if row_platforms else []
+        platform_objects = []
 
-    platform = fields.Field(
-        column_name='platforms',
-        attribute='platform',
-        widget=widgets.ForeignKeyWidget(Platform, 'id')
-    )
+        if platform_ids:
+            for platform_id in platform_ids:
+                platform_id = platform_id.strip()
+                try:
+                    platform = Platform.objects.get(pk=int(platform_id))
+                    platform_objects.append(platform)
+                except (Platform.DoesNotExist):
+                    print(f"Platform with ID {platform_id} does not exist.")
 
-    def after_import_row(self, row, row_result, **kwargs):
-        
-        platform_ids = row['platforms'][1:-1].split(',')
-        name = row['name']
+        return platform_objects
+    
+    def before_import_row(self, row, **kwargs):
+        game_instance = {
+            'name': row['name'],
+            'description': row['summary'],
+            'release_date': self.convert_date(row['first_release_date']),
+            'url': row['url'],
+            'igdb_id': row['id']
+        }
+        platforms = self.get_platform_objects(row['platforms'])
 
-        for platform_id in platform_ids:
-            platform = Platform.objects.get(pk=int(platform_id.strip()))
-            Game.objects.create(name=name, platform=platform)
+        if not platforms:
+            Game.objects.get_or_create(**game_instance)
+        else:
+            for platform in platforms:
+                game_instance['platform'] = platform
+                Game.objects.get_or_create(**game_instance)        
 
-        return row_result
+    def save_instance(self, instance, is_create, row, **kwargs):
+        pass
 
 class PlatformResource(resources.ModelResource):
 
@@ -43,6 +57,8 @@ class PlatformResource(resources.ModelResource):
 
 
 class GameAdmin(ImportExportModelAdmin):
+    list_display = ('id', 'name', 'platform', 'release_date', 'test_boolean', 'igdb_id', 'created_at')
+    
     resource_classes = [GameResource]
 
 class GameVersionAdmin(ImportExportModelAdmin):
@@ -54,7 +70,7 @@ class GameVersionAdmin(ImportExportModelAdmin):
     # resource_classes = [GameVersionResource]
 
 class PlatformAdmin(ImportExportModelAdmin):
-    list_display = ('name', 'release_date', 'url', 'generation')
+    list_display = ('id', 'name', 'release_date', 'url', 'generation')
 
     resource_classes = [PlatformResource]
 
